@@ -9,7 +9,7 @@ from config import config
 DEFAULT_STRING_MAX_LENGTH = 10000
 mongo_config = config['MONGO']
 
-connect(mongo_config['MONGO_DB'])
+connect(mongo_config['MONGO_DB'],host=mongo_config['MONGO_HOST'])
 
 
 class Role(Document):
@@ -47,6 +47,3 @@ class Activity(Document):
     ip_address = StringField(max_length=DEFAULT_STRING_MAX_LENGTH)
     mac_address = StringField(max_length=DEFAULT_STRING_MAX_LENGTH)
     value = StringField(max_length=DEFAULT_STRING_MAX_LENGTH)
-
-
-
