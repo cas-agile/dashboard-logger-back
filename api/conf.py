@@ -1,1 +1,1 @@
-CORS_URL = 'http://localhost'
+CORS_URL = '*'
