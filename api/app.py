@@ -172,8 +172,12 @@ def login():
             return make_response(jsonify({MESSAGE_KEY: 'User not found'}), HTTPStatus.NOT_FOUND)
         if _check_password(password, existing_user.password):
             login_user(existing_user)
-            return make_response(jsonify({MESSAGE_KEY: 'Success',
-                                          TOKEN_KEY: encode_auth_token(str(existing_user.id)).decode()}), HTTPStatus.OK)
+            return make_response(jsonify({NAME_KEY: str(existing_user.name),
+                                          SURNAME_KEY: str(existing_user.surname),
+                                          MESSAGE_KEY: 'Success',
+                                          TOKEN_KEY: encode_auth_token(str(existing_user.id)).decode()
+                                          }),
+                                          HTTPStatus.OK)
         return make_response(jsonify({MESSAGE_KEY: 'Failed to authenticate'}), HTTPStatus.UNAUTHORIZED)
     except Exception as e:
         logger.exception(f'Failed to login user. Error {e}')
@@ -392,7 +396,7 @@ def project_activities(project_id: str):
                 in: query
                 required: true
                 type: integer
-                description: amount of activities to return, max is 1000
+                description: amount of activities to return, max is 10000
             -   name: filters
                 in: query
                 required: false
@@ -418,7 +422,7 @@ def project_activities(project_id: str):
     """
     data = flask.request.args
     offset: int = int(data.get(OFFSET_KEY, 0))
-    amount_to_return: int = min(int(data.get(AMOUNT_TO_RETURN_KEY, 100)), 1000)
+    amount_to_return: int = min(int(data.get(AMOUNT_TO_RETURN_KEY, 100)), 10000)
     filters = data.get(FILTERS_KEY, {})
     start_time = data.get(START_TIME_KEY, None)
     end_time = data.get(END_TIME_KEY, None)
