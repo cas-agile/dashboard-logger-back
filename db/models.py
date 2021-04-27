@@ -9,7 +9,7 @@ from config import config
 DEFAULT_STRING_MAX_LENGTH = 10000
 mongo_config = config['MONGO']
 
-connect(mongo_config['MONGO_DB'],host=mongo_config['MONGO_HOST'],username=mongo_config['MONGO_USERNAME'],password=mongo_config['MONGO_PASSWORD'])
+connect(mongo_config['MONGO_DB'],host=mongo_config['MONGO_HOST'])
 
 
 class Role(Document):
