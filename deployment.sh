@@ -3,6 +3,7 @@ virtualenv -p python3 innometricsenv
 
 # pip requirements
 source innometricsenv/bin/activate
+pip install setuptools==57.1
 pip install -r requirements.txt
 
 echo "Add next lines to your ~/.bashrc file"
