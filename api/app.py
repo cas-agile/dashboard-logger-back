@@ -712,12 +712,6 @@ def activity_find():
     return make_response(jsonify({MESSAGE_KEY: 'Success', ACTIVITIES_KEY: activities_list}), HTTPStatus.OK)
 
 
-with app.test_request_context():
-    views = [login, activity_add, activity_delete, activity_find, logout, user_delete, user_register,
-             project_activities, invite, accept_invitation_endpoint]
-    for view in views:
-        spec.add_path(view=view)
-
 if __name__ == '__main__':
     # Save documentation
     with open(os.path.join(INNOMETRICS_PATH, 'documentation.yaml'), 'w') as f:
