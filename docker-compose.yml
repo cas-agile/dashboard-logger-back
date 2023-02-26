@@ -11,6 +11,14 @@ services:
       - mongo
     ports:
       - 9005:8120
+    environment:
+      FLASK_BASE_PATH: "/logger"
+      FLASK_PORT: 8120
+      FLASK_SECRET_KEY: "super-secret"
+      MONGO_DB: "logger_db"
+      MONGO_HOST: "logger-db"
+      MONGO_USER: "root"
+      MONGO_PASSWORD: "root"
     networks:
       - network-logger
 
@@ -22,11 +30,10 @@ services:
     expose:
       - "27017"
     environment:
-      MONGO_INITDB_DATABASE: logger_db
+      MONGO_INITDB_DATABASE: "logger_db"
       MONGO_INITDB_ROOT_USERNAME: "root"
       MONGO_INITDB_ROOT_PASSWORD: "root"
     volumes:
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./mongo-data:/data/db
     networks:
       - network-logger

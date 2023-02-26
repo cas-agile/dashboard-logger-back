@@ -11,7 +11,7 @@ import flask
 import jwt
 from apispec.ext.flask import FlaskPlugin
 from apispec.ext.marshmallow import MarshmallowPlugin
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, jsonify, Blueprint
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_cors import CORS
 from apispec import APISpec
@@ -21,16 +21,18 @@ from api.activity import add_activity, delete_activity, find_activities
 from api.constants import *
 from api.project import create_new_project, invite_user, accept_invitation, get_project_activities
 from api.conf import CORS_URL
-from config import config
 from db.models import User
 from logger import logger
 from utils import execute_function_in_parallel
 
+import os
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=[CORS_URL])
 
-flask_config = config['FLASK']
-app.secret_key = flask_config['SECRET_KEY']
+bp = Blueprint("routes", __name__)
+
+app.secret_key = os.environ['FLASK_SECRET_KEY']
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -69,7 +71,7 @@ def encode_auth_token(user_id) -> Optional[bytes]:
         }
         return jwt.encode(
             payload,
-            flask_config.get('SECRET_KEY'),
+            os.environ['FLASK_SECRET_KEY'],
             algorithm='HS256'
         )
     except Exception as e:
@@ -84,7 +86,7 @@ def decode_auth_token(auth_token) -> Optional[str]:
     :return: integer|string
     """
     try:
-        payload = jwt.decode(auth_token, flask_config.get('SECRET_KEY'))
+        payload = jwt.decode(auth_token, os.environ['FLASK_SECRET_KEY'])
         return payload['sub']
     except jwt.ExpiredSignatureError:
         #  Signature expired. Please log in again.
@@ -129,7 +131,7 @@ def _check_password(plain_pass: str, encoded_pass: str) -> bool:
     return bcrypt.checkpw(plain_pass.encode(), encoded_pass.encode())
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
     Login a user
@@ -184,7 +186,7 @@ def login():
         return make_response(jsonify({MESSAGE_KEY: 'Something bad happened'}), HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@app.route('/user', methods=['POST'])
+@bp.route('/user', methods=['POST'])
 def user_register():
     """
     Register a user
@@ -248,7 +250,7 @@ def user_register():
         return make_response(jsonify({MESSAGE_KEY: 'Something bad happened'}), HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@app.route('/project', methods=['POST'])
+@bp.route('/project', methods=['POST'])
 @login_required
 def new_project():
     """
@@ -286,7 +288,7 @@ def new_project():
         return make_response(jsonify({MESSAGE_KEY: 'Something bad happened'}), HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@app.route('/project/<string:project_id>/invite', methods=['POST'])
+@bp.route('/project/<string:project_id>/invite', methods=['POST'])
 @login_required
 def invite(project_id: str):
     """
@@ -337,7 +339,7 @@ def invite(project_id: str):
         return make_response(jsonify({MESSAGE_KEY: 'Something bad happened'}), HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@app.route('/project/<string:project_id>/accept_invitation', methods=['POST'])
+@bp.route('/project/<string:project_id>/accept_invitation', methods=['POST'])
 @login_required
 def accept_invitation_endpoint(project_id: str):
     """
@@ -372,7 +374,7 @@ def accept_invitation_endpoint(project_id: str):
         return make_response(jsonify({MESSAGE_KEY: 'Something bad happened'}), HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@app.route('/project/<string:project_id>/activity', methods=['GET'])
+@bp.route('/project/<string:project_id>/activity', methods=['GET'])
 @login_required
 def project_activities(project_id: str):
     """
@@ -451,7 +453,7 @@ def project_activities(project_id: str):
     return make_response(jsonify({MESSAGE_KEY: 'Success', ACTIVITIES_KEY: activities_list}), HTTPStatus.OK)
 
 
-@app.route('/user', methods=['DELETE'])
+@bp.route('/user', methods=['DELETE'])
 @login_required
 def user_delete():
     """
@@ -473,7 +475,7 @@ def user_delete():
     return make_response(jsonify({MESSAGE_KEY: 'Success'}), HTTPStatus.OK)
 
 
-@app.route("/logout", methods=['POST'])
+@bp.route("/logout", methods=['POST'])
 @login_required
 def logout():
     """
@@ -493,7 +495,7 @@ def logout():
     return make_response(jsonify({MESSAGE_KEY: 'Success'}), HTTPStatus.OK)
 
 
-@app.route('/activity', methods=['POST'])
+@bp.route('/activity', methods=['POST'])
 @login_required
 def activity_add():
     """
@@ -599,7 +601,7 @@ def activity_add():
     return make_response(jsonify({MESSAGE_KEY: 'Success', ACTIVITY_ID_KEY: result}), HTTPStatus.CREATED)
 
 
-@app.route('/activity', methods=['DELETE'])
+@bp.route('/activity', methods=['DELETE'])
 @login_required
 def activity_delete():
     """
@@ -639,7 +641,7 @@ def activity_delete():
     return make_response(jsonify({MESSAGE_KEY: 'Success'}), HTTPStatus.OK)
 
 
-@app.route('/activity', methods=['GET'])
+@bp.route('/activity', methods=['GET'])
 @login_required
 def activity_find():
     """
@@ -713,14 +715,16 @@ def activity_find():
 
 
 if __name__ == '__main__':
+    app.register_blueprint(bp, url_prefix=os.environ["FLASK_BASE_PATH"])
+
     # Save documentation
     with open(os.path.join(INNOMETRICS_PATH, 'documentation.yaml'), 'w') as f:
         f.write(spec.to_yaml())
 
     if not INNOMETRICS_PRODUCTION:
-        app.run(host='0.0.0.0', port=flask_config['PORT'], threaded=True)
+        app.run(host='0.0.0.0', port=os.environ['FLASK_PORT'], threaded=True)
     else:
-        server = WSGIServer(('0.0.0.0', int(flask_config['PORT'])), app,
+        server = WSGIServer(('0.0.0.0', int(os.environ['FLASK_PORT'])), app,
                             keyfile=INNOMETRICS_PRODUCTION_KEYFILE,
                             certfile=INNOMETRICS_PRODUCTION_CERTFILE)
         server.serve_forever()

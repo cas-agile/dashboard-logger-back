@@ -4,12 +4,17 @@ DB models for Mongo
 from flask_login import UserMixin
 from mongoengine import StringField, ListField, ReferenceField, DateTimeField, BooleanField, Document, connect
 
-from config import config
+import os
 
 DEFAULT_STRING_MAX_LENGTH = 10000
-mongo_config = config['MONGO']
 
-connect(mongo_config['MONGO_DB'],host=mongo_config['MONGO_HOST'])
+connect(
+    os.environ['MONGO_DB'],
+    host = os.environ['MONGO_HOST'],
+    username = os.environ['MONGO_USER'],
+    password = os.environ['MONGO_PASSWORD'],
+    authentication_source = "admin"
+)
 
 
 class Role(Document):
