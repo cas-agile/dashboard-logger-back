@@ -18,6 +18,8 @@ with open(logging_config_file, 'rt') as f:
         filename = handler.get('filename')
         if filename:
             handler['filename'] = os.path.join(INNOMETRICS_PATH, filename)
+            os.makedirs(os.path.dirname(handler['filename']), exist_ok=True) # Create missing directories
+            open(handler['filename'], "a").close() # Create missing log file
 
 logging.config.dictConfig(config)
 
