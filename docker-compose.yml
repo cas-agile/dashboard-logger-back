@@ -1,0 +1,36 @@
+version: "3.5"
+
+services:
+  logger-back:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cas-logger-back
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - 9005:8120
+    networks:
+      - network-logger
+
+  mongo:
+    image: mongo:4.4.19
+    container_name: cas-logger-db
+    hostname: logger-db
+    restart: unless-stopped
+    expose:
+      - "27017"
+    environment:
+      MONGO_INITDB_DATABASE: logger_db
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "root"
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-data:/data/db
+    networks:
+      - network-logger
+
+networks:
+  network-logger:
+    name: network-logger
